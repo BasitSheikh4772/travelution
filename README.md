@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Travelution — Next.js frontend (headless WordPress)
 
-## Getting Started
+Frontend: Next.js 16 (App Router, Cache Components) · Tailwind v4 · Motion (`motion/react`) · Magic UI–style components.
+CMS: the existing WordPress site (WP Travel Engine, Contact Form 7, Yoast).
 
-First, run the development server:
+Pages built so far: `/` Home · `/services` · `/contact`.
+
+## Run
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local   # then edit
+npm install
+npm run dev                  # http://localhost:3000
+npm run build && npm start
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## How WordPress sync works
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+WordPress REST (/wp-json/…)  ──►  src/lib/wp/queries.ts  ──►  typed models (types.ts)  ──►  components
+                                   ('use cache' + cacheTag)
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Frontend data | WordPress source | Status |
+|---|---|---|
+| Tour packages | `wp/v2/trip` (WP Travel Engine) | **live** — falls back to `fallback.ts` if WP is down |
+| Destinations | `wp/v2/destination` | **live** names/counts; artwork is bundled in `fallback.ts` (`destinationArt`) |
+| Services | `wp/v2/service` (does not exist yet) | bundled copy; create a `service` CPT with `show_in_rest` and it takes over automatically |
+| Contact details / socials | bundled (`fallback.ts`) | swap `getSiteInfo()` for an ACF Options endpoint when needed |
+| Enquiry form | CF7 via `/api/contact` | needs `WP_CF7_FORM_ID` (form fields: `your-name, your-email, your-phone, your-subject, your-message`) |
 
-## Learn More
+Components never touch raw WP JSON — only the models in `src/lib/wp/types.ts`. Adding a page later = add a query + mapper, no UI rewrite.
 
-To learn more about Next.js, take a look at the following resources:
+### Instant updates (webhook)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Data is cached (hours) and tagged. To refresh immediately when an editor saves in WP, call:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+POST {SITE_URL}/api/revalidate
+x-revalidate-secret: <REVALIDATE_SECRET>
+{ "tag": "trips" | "destinations" | "services" | "settings" | "all" }
+```
 
-## Deploy on Vercel
+(e.g. from the *WP Webhooks* plugin on `save_post`, or a few lines in a mu-plugin).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Important notes
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `WP_API_URL` currently points at the public site. The host's bot protection serves a challenge page to some non-browser clients; the client detects non-JSON and falls back to bundled data. For production, whitelist the Next server's IP or use a dedicated `cms.` subdomain.
+- Booking/checkout and trip detail links still go to WordPress (`trip.link`) until those pages are ported.
+- Destination/hero images are Unsplash placeholders — replace with brand photography (put in WP media, reference via `destinationArt`).
+- Copy for Services is a draft based on the live site's menu; confirm with the client.
+- Stats (12 yrs, 8k tours, 19k travellers, 97%) are copied from the current homepage.
