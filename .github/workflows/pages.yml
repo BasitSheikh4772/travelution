@@ -1,0 +1,50 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # static hosting has no server: drop API routes for this build (contact form runs in demo mode)
+      - run: rm -rf src/app/api
+      # static export can't use Cache Components: strip the cache directives from the WP queries
+      - run: sed -i '/"use cache";/d;/cacheTag(/d;/cacheLife(/d;/from "next\/cache"/d' src/lib/wp/queries.ts
+      - run: npm run build
+        env:
+          GITHUB_PAGES: "true"
+          NEXT_PUBLIC_BASE_PATH: /travelution
+          NEXT_PUBLIC_STATIC_DEMO: "true"
+          NEXT_PUBLIC_SITE_URL: https://basitsheikh4772.github.io/travelution
+      - run: touch out/.nojekyll
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: out
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

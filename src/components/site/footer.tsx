@@ -1,16 +1,10 @@
 import Link from "next/link";
-import { Suspense } from "react";
-import { connection } from "next/server";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { Logo } from "./logo";
+import { Year } from "./year";
 import { ShimmerButton } from "@/components/magicui/shimmer-button";
 import { Marquee } from "@/components/magicui/marquee";
 import { getSiteInfo } from "@/lib/wp/queries";
-
-async function Year() {
-  await connection();
-  return <>{new Date().getFullYear()}</>;
-}
 
 export async function Footer() {
   const s = await getSiteInfo();
@@ -81,7 +75,7 @@ export async function Footer() {
         </div>
       </div>
       <div className="border-t border-white/10 py-5 text-center text-xs text-white/50">
-        © <Suspense fallback={null}><Year /></Suspense> Travelution. All rights reserved.
+        © <Year /> Travelution. All rights reserved.
       </div>
     </footer>
   );

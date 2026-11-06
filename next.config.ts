@@ -1,8 +1,13 @@
 import type { NextConfig } from "next";
 
+// GitHub Pages build = fully static export under /<repo>. Normal build (Vercel/Node) is unaffected.
+const pages = process.env.GITHUB_PAGES === "true";
+const base = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+
 const nextConfig: NextConfig = {
-  cacheComponents: true,
-  partialPrefetching: true,
+  ...(pages ? { output: "export" as const, trailingSlash: true, basePath: base, assetPrefix: base } : {}),
+  cacheComponents: !pages,
+  partialPrefetching: !pages,
   turbopack: {
     rules: {
       "*.css": {
@@ -12,6 +17,7 @@ const nextConfig: NextConfig = {
     },
   },
   images: {
+    unoptimized: pages,
     remotePatterns: [
       { protocol: "https", hostname: "travelution.com.pk" },
       { protocol: "https", hostname: "images.unsplash.com" },

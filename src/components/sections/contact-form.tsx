@@ -33,6 +33,12 @@ export function ContactForm({ whatsapp }: { whatsapp: string }) {
     e.preventDefault();
     const data = Object.fromEntries(new FormData(e.currentTarget)) as Record<string, string>;
     setState({ status: "sending" });
+    if (process.env.NEXT_PUBLIC_STATIC_DEMO === "true") {
+      // static GitHub Pages preview has no server: simulate success (nothing is sent)
+      await new Promise((r) => setTimeout(r, 900));
+      setState({ status: "sent" });
+      return;
+    }
     try {
       const res = await fetch("/api/contact", {
         method: "POST",
