@@ -10,7 +10,12 @@ import { Logo } from "./logo";
 
 const links = [
   { href: "/", label: "Home" },
+  { href: "/tour-packages", label: "Tour Packages" },
+  { href: "/destinations", label: "Destinations" },
   { href: "/services", label: "Services" },
+  { href: "/about-us", label: "About" },
+  { href: "/reviews", label: "Reviews" },
+  { href: "/hajj-registration-2027", label: "Hajj 2027" },
   { href: "/contact", label: "Contact" },
 ];
 
@@ -36,7 +41,7 @@ export function Navbar() {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
         className={cn(
-          "flex w-full max-w-5xl items-center justify-between rounded-full border px-3 py-2 pl-5 backdrop-blur-xl transition-all duration-500",
+          "flex w-full max-w-6xl items-center justify-between rounded-full border px-3 py-2 pl-5 backdrop-blur-xl transition-all duration-500",
           scrolled
             ? "border-line bg-white/95 shadow-[0_10px_40px_-15px_rgba(70,13,19,0.35)]"
             : onDark
@@ -48,15 +53,15 @@ export function Navbar() {
           <Logo variant={onDark ? "light" : "color"} priority className="w-full" />
         </Link>
 
-        <ul className="hidden items-center gap-1 md:flex">
+        <ul className="hidden items-center gap-0.5 lg:flex">
           {links.map((l) => {
-            const active = path === l.href;
+            const active = l.href === "/" ? path === "/" : path === l.href || path.startsWith(`${l.href}/`);
             return (
               <li key={l.href} className="relative">
                 <Link
                   href={l.href}
                   className={cn(
-                    "relative z-10 block rounded-full px-4 py-2 text-sm font-medium transition-colors",
+                    "relative z-10 block rounded-full px-3 py-2 text-[13px] font-medium transition-colors",
                     onDark ? "text-white/85 hover:text-white" : "text-foreground/70 hover:text-brand",
                     active && (onDark ? "text-white" : "text-brand"),
                   )}
@@ -78,7 +83,7 @@ export function Navbar() {
         <div className="flex items-center gap-2">
           <Link
             href="/contact?topic=quote"
-            className="hidden items-center gap-2 rounded-full bg-gold-grad animate-gradient px-5 py-2.5 text-sm font-semibold text-brand-deep transition hover:scale-105 sm:inline-flex"
+            className="hidden items-center gap-2 rounded-full bg-gold-grad animate-gradient px-5 py-2.5 text-sm font-semibold text-brand-deep transition hover:scale-105 xl:inline-flex"
           >
             <Phone className="size-4" /> Request a quote
           </Link>
@@ -86,7 +91,7 @@ export function Navbar() {
             aria-label={open ? "Close menu" : "Open menu"}
             aria-expanded={open}
             onClick={() => setOpen((v) => !v)}
-            className={cn("grid size-10 place-items-center rounded-full md:hidden", onDark ? "text-white" : "text-brand")}
+            className={cn("grid size-10 place-items-center rounded-full lg:hidden", onDark ? "text-white" : "text-brand")}
           >
             {open ? <X className="size-5" /> : <Menu className="size-5" />}
           </button>
@@ -99,7 +104,7 @@ export function Navbar() {
             initial={{ opacity: 0, y: -10, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.98 }}
-            className="absolute inset-x-4 top-20 rounded-3xl border border-line bg-white/95 p-3 shadow-2xl backdrop-blur-xl md:hidden"
+            className="absolute inset-x-4 top-20 rounded-3xl border border-line bg-white/95 p-3 shadow-2xl backdrop-blur-xl lg:hidden"
           >
             {links.map((l) => (
               <Link key={l.href} href={l.href} onClick={() => setOpen(false)} className="block rounded-2xl px-4 py-3 text-lg font-medium text-brand hover:bg-brand/5">

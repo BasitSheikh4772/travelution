@@ -59,9 +59,13 @@ export async function Footer() {
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold">Explore</p>
           <ul className="mt-4 space-y-3 text-sm text-white/80">
             <li><Link className="hover:text-gold" href="/">Home</Link></li>
+            <li><Link className="hover:text-gold" href="/tour-packages">Tour packages</Link></li>
+            <li><Link className="hover:text-gold" href="/destinations">Destinations</Link></li>
             <li><Link className="hover:text-gold" href="/services">Services</Link></li>
+            <li><Link className="hover:text-gold" href="/about-us">About us</Link></li>
+            <li><Link className="hover:text-gold" href="/reviews">Reviews</Link></li>
+            <li><Link className="hover:text-gold" href="/hajj-registration-2027">Hajj 2027</Link></li>
             <li><Link className="hover:text-gold" href="/contact">Contact</Link></li>
-            <li><a className="hover:text-gold" href={`${s.wpUrl}/tour-packages/`}>Tour packages ↗</a></li>
           </ul>
         </div>
 

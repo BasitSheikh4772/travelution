@@ -19,6 +19,8 @@ export type Trip = {
   /** Canonical URL on the WordPress/booking site (used until trip pages are ported) */
   link: string;
   featured: boolean;
+  /** Full plain-text description (only populated by getTripBySlug) */
+  description?: string;
 };
 
 export type Destination = {

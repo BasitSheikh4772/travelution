@@ -108,6 +108,43 @@ export async function getTrips(opts: { limit?: number } = {}): Promise<Trip[]> {
   return raw.map((t) => mapTrip(t, destById));
 }
 
+/** Every trip (for the Tour Packages archive, destination pages and static params). */
+export async function getAllTrips(): Promise<Trip[]> {
+  return getTrips({ limit: 60 });
+}
+
+export async function getDestinationBySlug(slug: string): Promise<Destination | null> {
+  const all = await getDestinations();
+  return all.find((d) => d.slug === slug) ?? null;
+}
+
+export async function getTripsByDestination(slug: string): Promise<Trip[]> {
+  const all = await getAllTrips();
+  return all.filter((t) => t.destinationSlugs.includes(slug));
+}
+
+export async function getTripBySlug(slug: string): Promise<Trip | null> {
+  "use cache";
+  cacheTag(TAGS.trips);
+  cacheLife("hours");
+
+  const [raw, terms] = await Promise.all([
+    wpGet<(WpTrip & { content?: { rendered: string } })[]>("/wp/v2/trip", {
+      slug,
+      _fields: "id,slug,link,title,excerpt,content,destination,price,sale_price,currency,duration,is_featured,featured_image",
+    }),
+    wpGet<WpTerm[]>("/wp/v2/destination", { per_page: 50, _fields: "id,slug" }),
+  ]);
+
+  if (raw?.length) {
+    const destById = new Map((terms ?? []).map((t) => [t.id, t.slug]));
+    const mapped = mapTrip(raw[0], destById);
+    const description = raw[0].content?.rendered ? cleanText(raw[0].content.rendered, 3000) : "";
+    return { ...mapped, excerpt: cleanText(raw[0].excerpt.rendered, 400), description };
+  }
+  return fallbackTrips.find((t) => t.slug === slug) ?? null;
+}
+
 /**
  * Services: today they come from bundled copy. When you're ready, create a
  * `service` custom post type in WordPress (title, excerpt, ACF "features",

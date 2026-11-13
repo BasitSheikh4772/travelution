@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowUpRight, Clock, MapPin } from "lucide-react";
@@ -11,26 +12,39 @@ import { SectionHeading } from "./section-heading";
 
 const pretty = (s: string) => s.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
-export function Packages({ trips }: { trips: Trip[] }) {
+export function Packages({
+  trips,
+  limit = 6,
+  heading = true,
+}: {
+  trips: Trip[];
+  limit?: number;
+  /** false on the archive page, where PageHero already carries the title */
+  heading?: boolean;
+}) {
   const [filter, setFilter] = useState("all");
   const groups = useMemo(() => {
     const set = new Set<string>();
     trips.forEach((t) => t.destinationSlugs.forEach((d) => set.add(d)));
     return ["all", ...set];
   }, [trips]);
-  const shown = trips.filter((t) => filter === "all" || t.destinationSlugs.includes(filter)).slice(0, 6);
+  const shown = trips.filter((t) => filter === "all" || t.destinationSlugs.includes(filter)).slice(0, limit);
 
   return (
     <section id="packages" className="relative scroll-mt-24 overflow-hidden bg-[#f4ecdf] py-28">
       <div className="absolute -right-40 top-20 size-[30rem] animate-orb rounded-full bg-gold/20 blur-[110px]" />
       <div className="relative mx-auto max-w-6xl px-6">
         <div className="flex flex-wrap items-end justify-between gap-8">
-          <SectionHeading
-            watermark="Tours"
-            eyebrow="Best recommended"
-            title="Popular packages, crafted for every traveller"
-            body="Live from our booking system — always the latest itineraries."
-          />
+          {heading ? (
+            <SectionHeading
+              watermark="Tours"
+              eyebrow="Best recommended"
+              title="Popular packages, crafted for every traveller"
+              body="Live from our booking system — always the latest itineraries."
+            />
+          ) : (
+            <div />
+          )}
           {groups.length > 2 && (
             <div className="flex flex-wrap gap-2 rounded-full border border-line bg-white/70 p-1.5 backdrop-blur">
               {groups.map((g) => (
@@ -60,8 +74,8 @@ export function Packages({ trips }: { trips: Trip[] }) {
                   transition={{ delay: (i % 3) * 0.08, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
                 >
                   <Tilt max={6} className="h-full">
-                    <a
-                      href={t.link}
+                    <Link
+                      href={`/trip/${t.slug}`}
                       className="glow-border shine group relative flex h-full flex-col overflow-hidden rounded-[1.75rem] bg-white shadow-[0_20px_50px_-30px_rgba(70,13,19,0.5)] transition-shadow duration-500 hover:shadow-[0_35px_70px_-25px_rgba(70,13,19,0.6)]"
                     >
                       <div className="relative aspect-[4/3] overflow-hidden">
@@ -114,7 +128,7 @@ export function Packages({ trips }: { trips: Trip[] }) {
                           </span>
                         </div>
                       </div>
-                    </a>
+                    </Link>
                   </Tilt>
                 </motion.div>
               );
