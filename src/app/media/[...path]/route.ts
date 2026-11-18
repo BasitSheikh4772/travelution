@@ -4,6 +4,9 @@ import path from "node:path";
 import { Readable } from "node:stream";
 import { UPLOAD_DIR } from "@/lib/cms/db";
 
+// Starter files shipped inside the repo (small images/PDFs); uploads in UPLOAD_DIR take priority.
+const SEED_DIR = path.resolve(/* turbopackIgnore: true */ process.cwd(), "seed-media");
+
 
 const TYPES: Record<string, string> = {
   ".mp4": "video/mp4", ".webm": "video/webm", ".mov": "video/quicktime", ".m4v": "video/mp4",
@@ -14,11 +17,19 @@ const TYPES: Record<string, string> = {
 /** Serves files from data/uploads with HTTP Range support (needed for seeking in videos). */
 export async function GET(req: Request, ctx: { params: Promise<{ path: string[] }> }) {
   const { path: parts } = await ctx.params;
-  const file = path.resolve(UPLOAD_DIR, ...parts.map((p) => decodeURIComponent(p)));
+  const rel = parts.map((p) => decodeURIComponent(p));
+  let file = path.resolve(UPLOAD_DIR, ...rel);
   if (!file.startsWith(UPLOAD_DIR + path.sep)) return new Response("Not found", { status: 404 });
 
   const type = TYPES[path.extname(file).toLowerCase()];
-  const info = await stat(file).catch(() => null);
+  let info = await stat(file).catch(() => null);
+  if (!info?.isFile()) {
+    const seed = path.resolve(SEED_DIR, ...rel);
+    if (seed.startsWith(SEED_DIR + path.sep)) {
+      const si = await stat(seed).catch(() => null);
+      if (si?.isFile()) { file = seed; info = si; }
+    }
+  }
   if (!type || !info?.isFile()) return new Response("Not found", { status: 404 });
 
   const size = info.size;

@@ -85,3 +85,11 @@ from the admin (Destinations / Page content → Home) with your own photos.
    `node scripts/import-live.mjs --files-only` — it downloads the videos/PDFs/images into the volume.
    (Needs the old site to still be online; otherwise upload through the admin.)
 7. Custom domain: *Settings → Networking*; then set `NEXT_PUBLIC_SITE_URL` to it and redeploy.
+
+### Demo deploy (small volume)
+
+`seed-media/` (≈9 MB: tour images, visa PDFs, review posters) ships inside the repo and is served by `/media` when a
+file is not in `DATA_DIR/uploads`. For the review **videos** (≈820 MB) run the DB copy with
+`--remote-videos` so they play from the old live site until you move them to bigger storage:
+
+`node scripts/db-copy.mjs "<MYSQL_PUBLIC_URL>" --remote-videos`
