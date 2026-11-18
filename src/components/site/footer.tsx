@@ -1,20 +1,14 @@
 import Link from "next/link";
 import { Mail, MapPin, Phone } from "lucide-react";
 import { Logo } from "./logo";
+import { SocialIcon, socialName } from "./social-icon";
 import { Year } from "./year";
 import { ShimmerButton } from "@/components/magicui/shimmer-button";
 import { Marquee } from "@/components/magicui/marquee";
-import { getSiteInfo } from "@/lib/wp/queries";
+import { getContent, getSiteInfo } from "@/lib/cms/queries";
 
 export async function Footer() {
-  const s = await getSiteInfo();
-  const socials = [
-    ["Facebook", s.social.facebook],
-    ["Instagram", s.social.instagram],
-    ["YouTube", s.social.youtube],
-    ["X", s.social.x],
-    ["LinkedIn", s.social.linkedin],
-  ] as const;
+  const [s, c] = await Promise.all([getSiteInfo(), getContent()]);
 
   return (
     <footer className="relative overflow-hidden bg-brand-deep text-white grain">
@@ -22,7 +16,7 @@ export async function Footer() {
         <div className="absolute -right-24 -top-24 size-96 animate-orb rounded-full bg-gold/20 blur-[100px]" />
         <div className="relative mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-8 px-6 py-16">
           <h2 className="max-w-2xl font-display text-4xl font-medium leading-[1.05] sm:text-6xl">
-            Ready for your next <span className="text-gold-grad">journey?</span>
+            {c["footer.cta"]} <span className="text-gold-grad">{c["footer.ctaAccent"]}</span>
           </h2>
           <ShimmerButton href="/contact?topic=quote" variant="gold">Request a quote</ShimmerButton>
         </div>
@@ -38,18 +32,20 @@ export async function Footer() {
         <div>
           <Logo variant="light" className="w-56" />
           <p className="mt-4 max-w-sm text-sm leading-relaxed text-white/70">
-            Your travel companion from Karachi — private tours, Hajj &amp; Umrah, visas and insurance, designed around you.
+            {c["footer.tagline"]}
           </p>
-          <div className="mt-6 flex flex-wrap gap-2">
-            {socials.map(([n, h]) => (
+          <div className="mt-6 flex flex-wrap gap-2.5">
+            {s.socials.map((l) => (
               <a
-                key={n}
-                href={h}
+                key={l.id}
+                href={l.url}
                 target="_blank"
-                rel="noreferrer"
-                className="rounded-full border border-white/20 px-4 py-1.5 text-xs font-medium text-white/80 transition hover:border-gold hover:text-gold"
+                rel="noopener noreferrer me"
+                aria-label={socialName(l.platform)}
+                title={socialName(l.platform)}
+                className="grid size-10 place-items-center rounded-full border border-white/20 text-white/80 transition hover:-translate-y-0.5 hover:border-gold hover:bg-gold/10 hover:text-gold"
               >
-                {n}
+                <SocialIcon link={l} />
               </a>
             ))}
           </div>
@@ -65,6 +61,7 @@ export async function Footer() {
             <li><Link className="hover:text-gold" href="/about-us">About us</Link></li>
             <li><Link className="hover:text-gold" href="/reviews">Reviews</Link></li>
             <li><Link className="hover:text-gold" href="/hajj-registration-2027">Hajj 2027</Link></li>
+            <li><Link className="hover:text-gold" href="/faq">FAQ</Link></li>
             <li><Link className="hover:text-gold" href="/contact">Contact</Link></li>
           </ul>
         </div>

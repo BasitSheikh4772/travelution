@@ -19,9 +19,7 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: pages,
     remotePatterns: [
-      { protocol: "https", hostname: "travelution.com.pk" },
       { protocol: "https", hostname: "images.unsplash.com" },
-      // add your headless WP host here if it differs from the public domain
     ],
   },
 };

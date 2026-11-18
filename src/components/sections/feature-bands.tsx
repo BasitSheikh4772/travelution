@@ -6,7 +6,7 @@ import { ShimmerButton } from "@/components/magicui/shimmer-button";
 import { Marquee } from "@/components/magicui/marquee";
 import { Globe } from "@/components/magicui/globe";
 
-export function PrivateTour() {
+export function PrivateTour({ c }: { c: Record<string, string> }) {
   const steps = ["Share your budget & style", "We design the itinerary", "Confirm and travel stress-free"];
   return (
     <section className="mx-auto max-w-6xl px-6 py-24">
@@ -20,11 +20,10 @@ export function PrivateTour() {
                 <Route className="size-4" /> Private trip designer
               </p>
               <h2 className="mt-4 font-display text-4xl font-medium leading-[1.05] sm:text-6xl">
-                Design your <span className="text-gold-grad">private tour.</span>
+                {c["home.private.titleStart"]} <span className="text-gold-grad">{c["home.private.titleAccent"]}</span>
               </h2>
               <p className="mt-5 max-w-xl text-white/75">
-                Planning the perfect trip can feel overwhelming. We handle destinations, transport, hotels and experiences — a fully personalised
-                plan based on your preferences, budget and travel style.
+                {c["home.private.body"]}
               </p>
               <ol className="mt-8 space-y-3">
                 {steps.map((s, i) => (
@@ -54,7 +53,7 @@ export function PrivateTour() {
   );
 }
 
-export function HajjBanner({ image }: { image: string }) {
+export function HajjBanner({ image, c }: { image: string; c: Record<string, string> }) {
   return (
     <section className="relative isolate overflow-hidden py-32 text-white">
       <Image src={image} alt="" fill sizes="100vw" className="-z-20 object-cover" />
@@ -70,14 +69,14 @@ export function HajjBanner({ image }: { image: string }) {
             <Landmark className="size-4" /> Hajj 2027 registration
           </p>
           <h2 className="mt-4 max-w-2xl font-display text-4xl font-medium leading-[1.05] sm:text-6xl">
-            Your Hajj journey <span className="text-gold-grad">begins here.</span>
+            {c["home.hajj.titleStart"]} <span className="text-gold-grad">{c["home.hajj.titleAccent"]}</span>
           </h2>
           <p className="mt-5 max-w-xl text-white/75">
-            Experience a well-organised Hajj with trusted guidance, premium services and complete peace of mind.
+            {c["home.hajj.body"]}
           </p>
           <div className="mt-8">
             <ShimmerButton href="/contact?topic=hajj-2027" variant="gold">
-              Start your Hajj journey <ArrowRight className="size-4" />
+              {c["home.hajj.button"]} <ArrowRight className="size-4" />
             </ShimmerButton>
           </div>
         </BlurFade>

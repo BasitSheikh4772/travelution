@@ -12,12 +12,6 @@ import { FlightPath } from "@/components/magicui/flight-path";
 import { Tilt } from "@/components/magicui/tilt";
 import { LogoMark } from "@/components/site/logo";
 
-const stats = [
-  { value: 12, suffix: "+", label: "Years experience" },
-  { value: 8000, suffix: "+", label: "Tours completed" },
-  { value: 19000, suffix: "+", label: "Happy travellers" },
-  { value: 97, suffix: "%", label: "Retention rate" },
-];
 
 const cards = [
   { icon: Landmark, title: "Hajj 2027", sub: "Registration open", cls: "lg:top-[14%] lg:right-8", delay: "0s" },
@@ -25,7 +19,9 @@ const cards = [
   { icon: FileCheck2, title: "Visas & insurance", sub: "Handled end-to-end", cls: "lg:top-[76%] lg:right-2", delay: "2.4s" },
 ];
 
-export function Hero({ image }: { image: string }) {
+export function Hero({ image, c }: { image: string; c: Record<string, string> }) {
+  const stats = [1, 2, 3, 4].map((n) => ({ value: Number(c[`home.stat${n}.value`]) || 0, suffix: c[`home.stat${n}.suffix`], label: c[`home.stat${n}.label`] }));
+  const words = c["home.hero.words"].split(/\r?\n/).map((w) => w.trim()).filter(Boolean);
   const ref = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "22%"]);
@@ -69,13 +65,13 @@ export function Hero({ image }: { image: string }) {
             <span className="absolute inset-0 animate-pulse-ring rounded-full bg-gold" />
             <span className="relative size-2 rounded-full bg-gold-light" />
           </span>
-          The Future of Travel · Karachi
+          {c["home.hero.badge"]}
         </motion.p>
 
         <div className="max-w-3xl font-display text-5xl font-medium leading-[1.02] tracking-tight sm:text-6xl md:text-7xl lg:text-[5.4rem]">
-          <TextReveal text="Wake up in" as="h1" delay={2.1} className="" />
+          <TextReveal text={c["home.hero.line1"]} as="h1" delay={2.1} className="" />
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 2.6 }}>
-            <RotatingWords words={["Istanbul.", "Dubai.", "the Maldives.", "Hunza.", "Baku.", "Makkah."]} />
+            <RotatingWords words={words} />
           </motion.div>
         </div>
 
@@ -85,7 +81,7 @@ export function Hero({ image }: { image: string }) {
           transition={{ delay: 2.8, duration: 0.7 }}
           className="mt-7 max-w-xl text-base leading-relaxed text-white/80 sm:text-lg"
         >
-          Destinations, transport, hotels and experiences — handled for you. Tell us your budget and travel style; we design a trip that’s exclusively yours.
+          {c["home.hero.sub"]}
         </motion.p>
 
         <motion.div
@@ -95,10 +91,10 @@ export function Hero({ image }: { image: string }) {
           className="mt-9 flex flex-wrap items-center gap-4"
         >
           <ShimmerButton href="/contact?topic=private-trip" variant="gold">
-            Design your private tour <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+            {c["home.hero.cta1"]} <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
           </ShimmerButton>
           <a href="#packages" className="inline-flex items-center gap-2 rounded-full border border-white/30 px-6 py-3.5 text-sm font-semibold backdrop-blur transition hover:border-gold hover:text-gold">
-            <Compass className="size-4" /> Explore packages
+            <Compass className="size-4" /> {c["home.hero.cta2"]}
           </a>
         </motion.div>
 

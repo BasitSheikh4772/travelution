@@ -3,11 +3,11 @@
 import Image from "next/image";
 import { motion } from "motion/react";
 import { ArrowUpRight } from "lucide-react";
-import type { Destination } from "@/lib/wp/types";
+import type { Destination } from "@/lib/cms/types";
 import { Tilt } from "@/components/magicui/tilt";
 import { SectionHeading } from "./section-heading";
 
-export function Destinations({ items, wpUrl }: { items: Destination[]; wpUrl: string }) {
+export function Destinations({ items }: { items: Destination[] }) {
   return (
     <section className="mx-auto max-w-6xl px-6 py-24">
       <SectionHeading
@@ -28,7 +28,7 @@ export function Destinations({ items, wpUrl }: { items: Destination[]; wpUrl: st
           >
             <Tilt max={5} className="h-full">
               <motion.a
-                href={`${wpUrl}/destinations/${d.slug}/`}
+                href={`/destinations/${d.slug}`}
                 whileHover="hover"
                 className="glow-border shine group relative isolate block h-full overflow-hidden rounded-3xl bg-brand"
               >

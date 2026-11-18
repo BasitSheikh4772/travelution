@@ -5,8 +5,8 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowUpRight, Clock, MapPin } from "lucide-react";
-import type { Trip } from "@/lib/wp/types";
-import { formatPrice } from "@/lib/wp/format";
+import type { Trip } from "@/lib/cms/types";
+import { formatPrice } from "@/lib/cms/format";
 import { Tilt } from "@/components/magicui/tilt";
 import { SectionHeading } from "./section-heading";
 

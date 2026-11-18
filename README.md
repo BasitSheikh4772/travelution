@@ -1,52 +1,87 @@
-# Travelution — Next.js frontend (headless WordPress)
+# Travelution — Next.js website + admin portal
 
-Frontend: Next.js 16 (App Router, Cache Components) · Tailwind v4 · Motion (`motion/react`) · Magic UI–style components.
-CMS: the existing WordPress site (WP Travel Engine, Contact Form 7, Yoast).
+Self-contained site: **no WordPress / old-website dependency.** All content (tours, destinations, services,
+review videos, visa PDFs, page text, enquiries) lives in `data/` and is edited from the admin portal at `/admin`.
 
-Pages built so far: `/` Home · `/services` · `/contact`.
+Stack: Next.js 16 (App Router, Cache Components) · Tailwind v4 · Motion.
 
 ## Run
 
 ```bash
-cp .env.example .env.local   # then edit
 npm install
-npm run dev                  # http://localhost:3000
-npm run build && npm start
+cp .env.example .env.local     # set ADMIN_PASSWORD + SESSION_SECRET
+npm run dev                    # http://localhost:3000   (admin: /admin)
+npm run build && npm start     # production
 ```
 
-## How WordPress sync works
+## Admin portal (`/admin`)
 
-```
-WordPress REST (/wp-json/…)  ──►  src/lib/wp/queries.ts  ──►  typed models (types.ts)  ──►  components
-                                   ('use cache' + cacheTag)
-```
+| Section | What you can do |
+|---|---|
+| Reviews (videos) | upload / replace / reorder / hide / delete the client review videos |
+| Tour packages | add, edit (image, price, days, destinations), hide, delete |
+| Destinations | add, edit, reorder |
+| Services | edit the Services page cards |
+| Visa guides | upload country PDFs |
+| Page content | edit headings, paragraphs, buttons, banner images, stats on every page |
+| Enquiries | messages sent from the website forms |
+| Site settings | phone, email, address, WhatsApp, social links |
 
-| Frontend data | WordPress source | Status |
-|---|---|---|
-| Tour packages | `wp/v2/trip` (WP Travel Engine) | **live** — falls back to `fallback.ts` if WP is down |
-| Destinations | `wp/v2/destination` | **live** names/counts; artwork is bundled in `fallback.ts` (`destinationArt`) |
-| Services | `wp/v2/service` (does not exist yet) | bundled copy; create a `service` CPT with `show_in_rest` and it takes over automatically |
-| Contact details / socials | bundled (`fallback.ts`) | swap `getSiteInfo()` for an ACF Options endpoint when needed |
-| Enquiry form | CF7 via `/api/contact` | needs `WP_CF7_FORM_ID` (form fields: `your-name, your-email, your-phone, your-subject, your-message`) |
+Login: `ADMIN_USER` / `ADMIN_PASSWORD` from the environment (single admin, signed HttpOnly cookie).
+**Change the password before going live.** Edits are live immediately (cache tags are invalidated on save).
 
-Components never touch raw WP JSON — only the models in `src/lib/wp/types.ts`. Adding a page later = add a query + mapper, no UI rewrite.
+## Where data lives
 
-### Instant updates (webhook)
+**MySQL / MariaDB** (tables: reviews, trips, destinations, services, visa_guides, faqs, leads, settings, content_overrides).
+Set `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` in `.env.local` (XAMPP defaults work out of the box:
+root, no password, database `travelution`). The database and tables are created automatically on first run, and the
+old `data/content.json` is imported once (then no longer used — keep it as a backup).
 
-Data is cached (hours) and tagged. To refresh immediately when an editor saves in WP, call:
+- MySQL: all text and records.
+- `data/uploads/`: videos, images, PDFs, served at `/media/…` (HTTP Range, so videos seek).
 
-```
-POST {SITE_URL}/api/revalidate
-x-revalidate-secret: <REVALIDATE_SECRET>
-{ "tag": "trips" | "destinations" | "services" | "settings" | "all" }
-```
+Back up **both** the database (mysqldump) and `data/uploads` (`DATA_DIR` moves it; ≈850 MB of video, git-ignored).
 
-(e.g. from the *WP Webhooks* plugin on `save_post`, or a few lines in a mu-plugin).
+## Hosting requirements
 
-## Important notes
+Needs a Node host with MySQL and a **persistent disk** (for uploads) (VPS, cPanel “Node.js app”, Railway/Render with a volume).
+It will not work on Vercel/Netlify serverless or GitHub Pages (the `output: export` / Pages workflow
+can no longer be used — admin, uploads and the enquiry form need a server).
 
-- `WP_API_URL` currently points at the public site. The host's bot protection serves a challenge page to some non-browser clients; the client detects non-JSON and falls back to bundled data. For production, whitelist the Next server's IP or use a dedicated `cms.` subdomain.
-- Booking/checkout and trip detail links still go to WordPress (`trip.link`) until those pages are ported.
-- Destination/hero images are Unsplash placeholders — replace with brand photography (put in WP media, reference via `destinationArt`).
-- Copy for Services is a draft based on the live site's menu; confirm with the client.
-- Stats (12 yrs, 8k tours, 19k travellers, 97%) are copied from the current homepage.
+Large uploads (up to `MAX_UPLOAD_MB`, default 600) stream straight to disk. If you put nginx in front, set
+`client_max_body_size 700m;`.
+
+## One-off import from the old WordPress site
+
+`node scripts/import-live.mjs` downloaded the review videos/posters, tour images, visa PDFs, tours and
+destinations from the old site into `data/`. Re-running it **replaces** those collections, so run it only on a
+fresh `data/`.
+
+Notes: destination/hero images that were already Unsplash placeholders still point at Unsplash — replace them
+from the admin (Destinations / Page content → Home) with your own photos.
+
+## Deploy on Railway (GitHub → Railway)
+
+1. **Push to GitHub** — Railway auto-deploys on every push to the connected branch. (The old GitHub Pages
+   workflow is now manual-only; Pages can't run the admin/database.)
+2. **Railway project** → *New → GitHub Repo* (this repo), then add **MySQL** (*New → Database → MySQL*).
+3. **Copy the database** from your PC to Railway *before the first deploy* (so the build sees real data):
+   `node scripts/db-copy.mjs "<MYSQL_PUBLIC_URL of the Railway MySQL service>"`
+4. **Volume** on the web service: *Settings → Volumes → mount path* `/data` (holds the review videos/uploads).
+5. **Variables** on the web service (also used at build time, so use the *public* DB host):
+   ```
+   DB_HOST=${{MySQL.RAILWAY_TCP_PROXY_DOMAIN}}
+   DB_PORT=${{MySQL.RAILWAY_TCP_PROXY_PORT}}
+   DB_USER=${{MySQL.MYSQLUSER}}
+   DB_PASSWORD=${{MySQL.MYSQLPASSWORD}}
+   DB_NAME=${{MySQL.MYSQLDATABASE}}
+   DATA_DIR=/data
+   ADMIN_USER=admin
+   ADMIN_PASSWORD=<strong password>
+   SESSION_SECRET=<long random string>
+   NEXT_PUBLIC_SITE_URL=https://<your-domain>
+   ```
+6. **Media files**: after the first deploy open a shell on the service (`railway ssh`) and run
+   `node scripts/import-live.mjs --files-only` — it downloads the videos/PDFs/images into the volume.
+   (Needs the old site to still be online; otherwise upload through the admin.)
+7. Custom domain: *Settings → Networking*; then set `NEXT_PUBLIC_SITE_URL` to it and redeploy.

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, BadgeCheck, Compass, FileText, Landmark, Moon, ShieldPlus, UserRoundCheck, type LucideIcon } from "lucide-react";
-import type { Service } from "@/lib/wp/types";
+import type { Service } from "@/lib/cms/types";
 import { BlurFade } from "@/components/magicui/blur-fade";
 import { MagicCard } from "@/components/magicui/magic-card";
 import { BorderBeam } from "@/components/magicui/border-beam";

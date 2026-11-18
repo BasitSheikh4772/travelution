@@ -1,8 +1,8 @@
 name: Deploy to GitHub Pages
 
+# DISABLED on push: the app now needs Node + MySQL (deployed on Railway), so the static GitHub Pages
+# demo build no longer works. Kept as a manual-only workflow.
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:

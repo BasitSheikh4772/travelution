@@ -1,5 +1,5 @@
 import { MessageCircle } from "lucide-react";
-import { getSiteInfo } from "@/lib/wp/queries";
+import { getSiteInfo } from "@/lib/cms/queries";
 
 export async function WhatsAppButton() {
   const s = await getSiteInfo();

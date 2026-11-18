@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { CF7_FORM_ID, WP_REST } from "@/lib/wp/config";
+import { mutateDb } from "@/lib/cms/db";
 
-/**
- * Proxies the enquiry form to WordPress Contact Form 7 so submissions land in
- * the same inbox / CF7 flamingo log as before — and the browser never needs CORS.
- *
- * CF7 form must have these fields: your-name, your-email, your-phone, your-subject, your-message
- */
+
+const hits = new Map<string, number[]>();
+
+/** Stores website enquiries in the admin portal (Enquiries). */
 export async function POST(req: NextRequest) {
   const body = (await req.json().catch(() => null)) as Record<string, string> | null;
   if (!body?.name || !body?.email || !body?.message) {
@@ -14,34 +12,25 @@ export async function POST(req: NextRequest) {
   }
   if (body.website) return NextResponse.json({ ok: true }); // honeypot
 
-  // Client-review demo: pretend success (nothing is sent). Remove DEMO_MODE once CF7 is wired.
-  if (!CF7_FORM_ID && process.env.DEMO_MODE === "true") return NextResponse.json({ ok: true, demo: true });
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
+  const now = Date.now();
+  const recent = (hits.get(ip) ?? []).filter((t) => now - t < 10 * 60_000);
+  if (recent.length >= 8) return NextResponse.json({ ok: false, message: "Too many messages — please WhatsApp or call us." }, { status: 429 });
+  hits.set(ip, [...recent, now]);
 
-  if (!CF7_FORM_ID) {
-    return NextResponse.json(
-      { ok: false, message: "Form isn't connected to WordPress yet. Please WhatsApp or call us." },
-      { status: 503 },
-    );
-  }
-
-  const fd = new FormData();
-  fd.set("_wpcf7_unit_tag", `wpcf7-f${CF7_FORM_ID}-p0-o1`);
-  fd.set("your-name", body.name);
-  fd.set("your-email", body.email);
-  fd.set("your-phone", body.phone ?? "");
-  fd.set("your-subject", body.topic ? `Website enquiry — ${body.topic}` : "Website enquiry");
-  fd.set("your-message", body.message);
-
-  try {
-    const res = await fetch(`${WP_REST}/contact-form-7/v1/contact-forms/${CF7_FORM_ID}/feedback`, {
-      method: "POST",
-      body: fd,
-      signal: AbortSignal.timeout(15000),
+  const clip = (v: unknown, n: number) => String(v ?? "").slice(0, n);
+  await mutateDb((db) => {
+    db.leads.unshift({
+      id: crypto.randomUUID().slice(0, 8),
+      createdAt: new Date().toISOString(),
+      topic: clip(body.topic, 120),
+      name: clip(body.name, 120),
+      email: clip(body.email, 160),
+      phone: clip(body.phone, 60),
+      message: clip(body.message, 6000),
+      read: false,
     });
-    const json = (await res.json()) as { status?: string; message?: string };
-    if (json.status === "mail_sent") return NextResponse.json({ ok: true });
-    return NextResponse.json({ ok: false, message: json.message ?? "Couldn't send. Please try again." }, { status: 422 });
-  } catch {
-    return NextResponse.json({ ok: false, message: "Couldn't reach the server. Please try again." }, { status: 502 });
-  }
+    db.leads = db.leads.slice(0, 2000);
+  }, ["leads"]);
+  return NextResponse.json({ ok: true });
 }
