@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { getContent } from "@/lib/cms/queries";
 
-export const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").replace(/\/$/, "");
+/** Accepts a bare hostname too (adds https://), so a missing scheme can never break the build. */
+const rawSite = (process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000").trim();
+export const SITE_URL = (/^https?:\/\//.test(rawSite) ? rawSite : `https://${rawSite}`).replace(/\/$/, "");
 export const SITE_NAME = "Travelution";
 
 export const abs = (u: string) => (/^https?:\/\//.test(u) ? u : `${SITE_URL}${u.startsWith("/") ? "" : "/"}${u}`);

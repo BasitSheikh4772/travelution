@@ -7,13 +7,14 @@ import { Footer } from "@/components/site/footer";
 import { Preloader } from "@/components/site/preloader";
 import { ScrollProgress } from "@/components/magicui/scroll-progress";
 import { WhatsAppButton } from "@/components/site/whatsapp-button";
+import { SITE_URL } from "@/lib/seo";
 import { SiteJsonLd } from "@/components/seo/site-json-ld";
 
 const jakarta = Plus_Jakarta_Sans({ variable: "--font-jakarta", subsets: ["latin"] });
 const fraunces = Fraunces({ variable: "--font-fraunces", subsets: ["latin"], axes: ["opsz"] });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
+  metadataBase: new URL(SITE_URL),
   title: { default: "Travelution — Tours, Umrah, Hajj & Visas from Karachi", template: "%s | Travelution" },
   description:
     "Travelution is a Karachi-based travel company crafting private tours, Hajj & Umrah journeys, visas and insurance — worldwide.",
